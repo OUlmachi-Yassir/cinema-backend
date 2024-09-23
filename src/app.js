@@ -1,7 +1,11 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');  
+
 const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const filmRoutes = require('./routes/filmRoutes');
+
 const cookieParser = require('cookie-parser');
 
 
@@ -19,6 +23,8 @@ app.use(cookieParser());
 
 
 app.use('/api/auth', userRoutes);
+app.use('/api/admins', adminRoutes);
+app.use('/api/films', filmRoutes);
 
 
 const PORT = process.env.PORT || 5000;

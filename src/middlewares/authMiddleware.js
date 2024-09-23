@@ -26,4 +26,19 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+
+const adminOnly = (req, res, next) => {
+  if (req.user) {
+    console.log('User role:', req.user.role); // Debugging line
+
+    if (req.user.role === 'admin') {
+      next();
+    } else {
+      res.status(403).json({ message: 'Admin access only' });
+    }
+  } else {
+    res.status(403).json({ message: 'User not found' });
+  }
+};
+
+module.exports = { protect, adminOnly };
