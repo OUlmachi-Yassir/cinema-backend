@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const releaseYearRegex = /^\d{4}-\d{2}-\d{2}$/;
+
 const filmSchema = mongoose.Schema({
   title: {
     type: String,
@@ -13,9 +15,15 @@ const filmSchema = mongoose.Schema({
     type: String,
     required: true
   },
-  year: {
-    type: Number,
-    required: true
+  releaseYear: {
+    type: String, 
+    required: [true, 'Release year is required'],
+    validate: {
+      validator: function(v) {
+        return releaseYearRegex.test(v);
+      },
+      message: props => `${props.value} is not a valid release year! Please use the format YYYY-MM-DD.`
+    }
   }
 }, {
   timestamps: true
