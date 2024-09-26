@@ -1,53 +1,46 @@
 const Reservation = require('../models/reservationModel');
-const Room = require('../models/Room');
-
+const Seance = require('../models/seanceModel');
 
 const createReservation = async (req, res) => {
-  const { film, roomId, seatNumber } = req.body;
-  const client = req.user._id; 
+  const { seance, nombrePlace } = req.body;
 
   try {
-    const room = await Room.findById(roomId);
+    const clientId = req.user._id;
 
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
+    const foundSeance = await Seance.findById(seance);
+
+    if (!foundSeance) {
+      return res.status(404).json({ message: 'Seance not found' });
     }
 
-  
-    const seat = room.seats.find(seat => seat.seatNumber === seatNumber && seat.isAvailable);
-
-    if (!seat) {
-      return res.status(400).json({ message: 'Seat is not available' });
+    if (foundSeance.placesDisponibles < nombrePlace) {
+      return res.status(400).json({ message: 'Not enough available seats for this seance' });
     }
 
-    
-    seat.isAvailable = false;
-    await room.save();
-
-   
     const reservation = new Reservation({
-      client,
-      film,
-      room: room._id,
-      seatNumber
+      client: clientId,
+      seance,
+      nombrePlace,
     });
 
     const createdReservation = await reservation.save();
+
+    foundSeance.placesDisponibles -= nombrePlace;
+    await foundSeance.save();
+
     res.status(201).json(createdReservation);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
-// @desc    Get all reservations for the authenticated client
-// @route   GET /api/reservations
-// @access  Client
-const getReservations = async (req, res) => {
+const getReservationsByClient = async (req, res) => {
   try {
-    const reservations = await Reservation.find({ client: req.user._id })
-      .populate('film')
-      .populate('room');
-    
+    const clientId = req.user._id; 
+    const reservations = await Reservation.find({ client: clientId })
+      .populate('seance')  
+      .populate('client');
+
     res.status(200).json(reservations);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -56,5 +49,5 @@ const getReservations = async (req, res) => {
 
 module.exports = {
   createReservation,
-  getReservations
+  getReservationsByClient
 };

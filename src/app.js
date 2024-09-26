@@ -7,6 +7,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const filmRoutes = require('./routes/filmRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const seanceRoutes =require('./routes/seanceRoutes');
+const reservation =require('./routes/reservationRoutes');
 
 const cookieParser = require('cookie-parser');
 
@@ -29,6 +30,7 @@ app.use('/api/admins', adminRoutes);
 app.use('/api/films', filmRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/seance', seanceRoutes);
+app.use('/api/reservation',reservation);
 
 
 const PORT = process.env.PORT || 5000;

@@ -6,19 +6,14 @@ const reservationSchema = new mongoose.Schema({
     ref: 'User', 
     required: true
   },
-  film: {
+  seance: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Film',  
-    required: true
+    ref: 'Seance',
+    required: true,
   },
-  room: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Room', 
-    required: true
-  },
-  seatNumber: {
-    type: String,
-    required: true
+  nombrePlace: {
+    type: Number,
+    required: true,
   },
 }, {
   timestamps: true
