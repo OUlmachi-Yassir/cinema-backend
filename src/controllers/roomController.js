@@ -2,7 +2,7 @@ const Room = require('../models/roomModel');
 
 
 const createRoom = async (req, res) => {
-  const { name, film, seatCount } = req.body;
+  const { name, seatCount,type } = req.body;
 
   try {
     
@@ -17,8 +17,8 @@ const createRoom = async (req, res) => {
  
     const newRoom = new Room({
       name,
-      film,
-      seats
+      seats,
+      type
     });
 
     const createdRoom = await newRoom.save();

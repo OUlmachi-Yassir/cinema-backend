@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const seanceSchema = new mongoose.Schema({
   horaire: {
     type: Date,
@@ -12,12 +11,12 @@ const seanceSchema = new mongoose.Schema({
   },
   film: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Film', 
+    ref: 'Film',
     required: true
   },
   room: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Room', 
+    ref: 'Room',
     required: true
   },
   placesDisponibles: {

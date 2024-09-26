@@ -8,21 +8,21 @@ const seatSchema = new mongoose.Schema({
   isAvailable: {
     type: Boolean,
     default: true 
-  }
+  } 
 });
-
 
 const roomSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true
   },
-  film: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Film', 
+  seats: [seatSchema], 
+  type: {
+    type: String,
+    enum: ['Eco', 'VIP'],
+    default: 'Eco',  
     required: true
   },
-  seats: [seatSchema], 
 }, {
   timestamps: true
 });
