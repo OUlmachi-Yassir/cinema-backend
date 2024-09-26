@@ -1,14 +1,18 @@
 const mongoose = require('mongoose');
 
-const reservationSchema = new mongoose.Schema({
-  client: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', 
+
+const seanceSchema = new mongoose.Schema({
+  horaire: {
+    type: Date,
+    required: true
+  },
+  tarif: {
+    type: Number,
     required: true
   },
   film: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Film',  
+    ref: 'Film', 
     required: true
   },
   room: {
@@ -16,13 +20,13 @@ const reservationSchema = new mongoose.Schema({
     ref: 'Room', 
     required: true
   },
-  seatNumber: {
-    type: String,
+  placesDisponibles: {
+    type: Number,
     required: true
-  },
+  }
 }, {
   timestamps: true
 });
 
-const Reservation = mongoose.model('Reservation', reservationSchema);
-module.exports = Reservation;
+const Seance = mongoose.model('Seance', seanceSchema);
+module.exports = Seance;

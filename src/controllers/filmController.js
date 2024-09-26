@@ -1,6 +1,6 @@
 const Film = require('../models/filmModel');
 
-// Get all films
+
 const getFilms = async (req, res) => {
   try {
     const films = await Film.find();
@@ -10,7 +10,7 @@ const getFilms = async (req, res) => {
   }
 };
 
-// Add a new film
+
 const addFilm = async (req, res) => {
   const { title, director, releaseYear, genre } = req.body;
 
@@ -23,7 +23,6 @@ const addFilm = async (req, res) => {
   }
 };
 
-// Update a film by ID
 const updateFilm = async (req, res) => {
   const { id } = req.params;
   const { title, director, releaseYear, genre } = req.body;
@@ -34,7 +33,7 @@ const updateFilm = async (req, res) => {
       return res.status(404).json({ message: 'Film not found' });
     }
 
-    // Update film details
+    
     film.title = title || film.title;
     film.director = director || film.director;
     film.releaseYear = releaseYear || film.releaseYear;
@@ -47,7 +46,7 @@ const updateFilm = async (req, res) => {
   }
 };
 
-// Delete a film by ID
+
 const deleteFilm = async (req, res) => {
   const { id } = req.params;
 

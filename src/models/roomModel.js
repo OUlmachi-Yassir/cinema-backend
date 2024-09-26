@@ -1,24 +1,28 @@
 const mongoose = require('mongoose');
 
-const roomSchema = mongoose.Schema({
+const seatSchema = new mongoose.Schema({
+  seatNumber: {
+    type: String,
+    required: true
+  },
+  isAvailable: {
+    type: Boolean,
+    default: true 
+  }
+});
+
+
+const roomSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true
   },
-  films: [{
+  film: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Film', 
-  }],
-  seats: [{
-    seatNumber: {
-      type: String,
-      required: true
-    },
-    isAvailable: {
-      type: Boolean,
-      default: true
-    }
-  }]
+    required: true
+  },
+  seats: [seatSchema], 
 }, {
   timestamps: true
 });
