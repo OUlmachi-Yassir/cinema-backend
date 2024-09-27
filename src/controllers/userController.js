@@ -118,5 +118,4 @@ module.exports = {
   loginUser,
   sendNotification,
   logoutUser,
-  welcomeUser,
 };

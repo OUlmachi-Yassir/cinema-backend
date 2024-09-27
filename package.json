@@ -12,11 +12,14 @@
   "version": "1.0.0",
   "main": "src/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "dev": "nodemon src/app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
 }
