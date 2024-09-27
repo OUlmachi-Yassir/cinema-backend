@@ -13,15 +13,23 @@ const getFilms = async (req, res) => {
 
 const addFilm = async (req, res) => {
   const { title, director, releaseYear, genre } = req.body;
-
+  
+  if (!req.file) {
+    return res.status(400).json({ message: 'No image file provided' });
+  }
+  
+  const image = req.file.path;
+  
   try {
-    const newFilm = new Film({ title, director, releaseYear, genre });
+    const newFilm = new Film({ title, director, releaseYear, genre, image });
     await newFilm.save();
     res.status(201).json({ message: 'Film added successfully', newFilm });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 const updateFilm = async (req, res) => {
   const { id } = req.params;

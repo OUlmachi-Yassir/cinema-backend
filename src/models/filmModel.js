@@ -24,6 +24,10 @@ const filmSchema = mongoose.Schema({
       },
       message: props => `${props.value} is not a valid release year! Please use the format YYYY-MM-DD.`
     }
+  },
+  image: {
+    type: String,
+    required: true
   }
 }, {
   timestamps: true
