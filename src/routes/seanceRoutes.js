@@ -4,7 +4,7 @@ const {createSeance,getSeances,getSeanceById,updateSeance,deleteSeance} = requir
 const {protect, adminOnly }= require('../middlewares/authMiddleware')
 
 
-router.get('/',protect, adminOnly, getSeances);
+router.get('/', getSeances);
 router.get('/:id',protect, adminOnly ,getSeanceById);
 
 router.post('/add',protect, adminOnly, createSeance);

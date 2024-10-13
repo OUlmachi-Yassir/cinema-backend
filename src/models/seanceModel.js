@@ -1,5 +1,14 @@
 const mongoose = require('mongoose');
 
+const seatSchema = new mongoose.Schema({
+  seatNumber: String,   
+  isAvailable: {
+    type: Boolean,
+    default: true
+  }
+});
+
+
 const seanceSchema = new mongoose.Schema({
   horaire: {
     type: Date,
@@ -19,10 +28,7 @@ const seanceSchema = new mongoose.Schema({
     ref: 'Room',
     required: true
   },
-  placesDisponibles: {
-    type: Number,
-    required: true
-  }
+  seats: [seatSchema], 
 }, {
   timestamps: true
 });

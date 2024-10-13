@@ -1,28 +1,20 @@
 const mongoose = require('mongoose');
 
-const seatSchema = new mongoose.Schema({
-  seatNumber: {
-    type: String,
-    required: true
-  },
-  isAvailable: {
-    type: Boolean,
-    default: true 
-  } 
-});
-
 const roomSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true
   },
-  seats: [seatSchema], 
-  type: {
-    type: String,
-    enum: ['Eco', 'VIP'],
-    default: 'Eco',  
+  numberOfSeats: {
+    type: Number,
     required: true
   },
+  type: {
+    type: String,
+    enum: ['Standard', 'Deluxe', 'VIP'],
+    default: 'Standard',
+    required: true
+  }
 }, {
   timestamps: true
 });

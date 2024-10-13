@@ -11,10 +11,10 @@ const reservationSchema = new mongoose.Schema({
     ref: 'Seance',
     required: true,
   },
-  nombrePlace: {
-    type: Number,
+  seatNumbers: {  
+    type: [String], 
     required: true,
-  },
+  }
 }, {
   timestamps: true
 });

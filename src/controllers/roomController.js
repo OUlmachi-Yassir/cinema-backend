@@ -2,22 +2,12 @@ const Room = require('../models/roomModel');
 
 
 const createRoom = async (req, res) => {
-  const { name, seatCount,type } = req.body;
+  const { name, numberOfSeats,type } = req.body;
 
   try {
-    
-    const seats = [];
-    for (let i = 1; i <= seatCount; i++) {
-      seats.push({
-        seatNumber: `Seat-${i}`,
-        isAvailable: true 
-      });
-    }
-
- 
     const newRoom = new Room({
       name,
-      seats,
+      numberOfSeats,
       type
     });
 
@@ -29,7 +19,7 @@ const createRoom = async (req, res) => {
 };
 const updateRoom = async (req, res) => {
   const { id } = req.params;
-  const { name, seatCount, type } = req.body;
+  const { name, numberOfSeats, type } = req.body;
 
   try {
     const room = await Room.findById(id);
@@ -41,15 +31,8 @@ const updateRoom = async (req, res) => {
     room.name = name || room.name;
     room.type = type || room.type;
 
-    if (seatCount) {
-      const seats = [];
-      for (let i = 1; i <= seatCount; i++) {
-        seats.push({
-          seatNumber: `Seat-${i}`,
-          isAvailable: true
-        });
-      }
-      room.seats = seats;
+    if (numberOfSeats) {
+      room.numberOfSeats = numberOfSeats;
     }
 
     const updatedRoom = await room.save();

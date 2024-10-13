@@ -13,6 +13,8 @@ const seanceRoutes =require('./routes/seanceRoutes');
 const reservation =require('./routes/reservationRoutes');
 
 const cookieParser = require('cookie-parser');
+const Seance = require('./models/seanceModel');
+const Film = require('./models/filmModel');
 
 
 
@@ -29,7 +31,7 @@ app.use(cookieParser());
 
 
 
-app.use( express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api/auth', userRoutes);
 app.use('/api/admins', adminRoutes);
@@ -38,6 +40,30 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/seance', seanceRoutes);
 app.use('/api/reservation',reservation);
 
+app.get('/api/seances', async (req, res) => {
+  const { filmId } = req.query;
+
+  if (!filmId) {
+    return res.status(400).json({ message: 'Film ID is required' });
+  }
+
+  try {
+    const seances = await Seance.find({ film: filmId }).populate('room');
+    res.json(seances);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching seances' });
+  }
+});
+app.get('/api/films/:filmId', async (req, res) => {
+  const filmId = req.params.filmId;
+  try {
+    const film = await Film.findById(filmId);
+    res.json(film);
+  } catch (err) {
+    res.status(500).json({ error: 'Film not found' });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 

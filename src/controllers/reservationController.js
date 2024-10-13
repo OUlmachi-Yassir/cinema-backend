@@ -1,36 +1,84 @@
+const mongoose = require('mongoose');
 const Reservation = require('../models/reservationModel');
 const Seance = require('../models/seanceModel');
+const Room = require('../models/roomModel');
+
 
 const createReservation = async (req, res) => {
-  const { seance, nombrePlace } = req.body;
+  const { seance: seanceId, seatNumbers } = req.body;
 
   try {
     const clientId = req.user._id;
 
-    const foundSeance = await Seance.findById(seance);
+    const seance = await Seance.findById(seanceId).populate('room');
 
-    if (!foundSeance) {
+    if (!seance) {
       return res.status(404).json({ message: 'Seance not found' });
     }
 
-    if (foundSeance.placesDisponibles < nombrePlace) {
-      return res.status(400).json({ message: 'Not enough available seats for this seance' });
+    const roomSeatNumbers = seance.room.seats.map(seat => seat.seatNumber);
+    const invalidSeats = seatNumbers.filter(seat => !roomSeatNumbers.includes(seat));
+
+    if (invalidSeats.length > 0) {
+      return res.status(400).json({ message: `Invalid seat numbers: ${invalidSeats.join(', ')}` });
+    }
+
+    if (seance.placesDisponibles < seatNumbers.length) {
+      return res.status(400).json({ message: 'Not enough available places' });
+    }
+
+    const existingReservations = await Reservation.find({
+      seance: seanceId,
+      seatNumbers: { $in: seatNumbers }
+    });
+
+    const alreadyReservedSeats = existingReservations.reduce((acc, reservation) => {
+      return acc.concat(reservation.seatNumbers);
+    }, []);
+
+    const unavailableSeats = seatNumbers.filter(seat => alreadyReservedSeats.includes(seat));
+
+    if (unavailableSeats.length > 0) {
+      return res.status(400).json({ message: `Seats already reserved: ${unavailableSeats.join(', ')}` });
     }
 
     const reservation = new Reservation({
       client: clientId,
-      seance,
-      nombrePlace,
+      seance: seanceId,
+      seatNumbers
     });
 
-    const createdReservation = await reservation.save();
+    await reservation.save();
 
-    foundSeance.placesDisponibles -= nombrePlace;
-    await foundSeance.save();
+    const updatedSeance = await Seance.findOneAndUpdate(
+      { _id: seanceId, placesDisponibles: { $gte: seatNumbers.length }, __v: seance.__v },
+      { 
+        $inc: { placesDisponibles: -seatNumbers.length },
+        $inc: { __v: 1 }
+      },
+      { new: true }
+    );
 
-    res.status(201).json(createdReservation);
+    if (!updatedSeance) {
+      await Reservation.findByIdAndDelete(reservation._id);
+      return res.status(409).json({ message: 'Failed to reserve seats due to concurrent updates. Please try again.' });
+    }
+
+    await Room.updateOne(
+      { _id: seance.room._id, 'seats.seatNumber': { $in: seatNumbers } },
+      { $set: { 'seats.$[seat].isAvailable': false } },
+      { arrayFilters: [{ 'seat.seatNumber': { $in: seatNumbers } }] }
+    );
+
+    res.status(201).json({ 
+      message: 'Seats reserved successfully', 
+      reservation 
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    if (error.code === 11000) { 
+      return res.status(400).json({ message: 'One or more seats are already reserved' });
+    }
+    res.status(500).json({ message: error.message });
   }
 };
 
