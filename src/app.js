@@ -4,22 +4,20 @@ const connectDB = require('./config/db');
 const path = require('path');
 const cors = require('cors');
 
-
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const filmRoutes = require('./routes/filmRoutes');
 const roomRoutes = require('./routes/roomRoutes');
-const seanceRoutes =require('./routes/seanceRoutes');
-const reservation =require('./routes/reservationRoutes');
+const seanceRoutes = require('./routes/seanceRoutes');
+const reservation = require('./routes/reservationRoutes');
 
 const cookieParser = require('cookie-parser');
 const Seance = require('./models/seanceModel');
 const Film = require('./models/filmModel');
 
-
+const { minioClient, BUCKET_NAME } = require('./config/minioConfig'); // <-- Import here
 
 dotenv.config();
-
 
 connectDB();
 
@@ -29,9 +27,9 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser()); 
 
-
-
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// app.use('/uploads/videos', express.static(path.join(__dirname, 'uploads/videos')));
 
 app.use('/api/auth', userRoutes);
 app.use('/api/admins', adminRoutes);
@@ -55,13 +53,40 @@ app.get('/api/seances', async (req, res) => {
     res.status(500).json({ message: 'Error fetching seances' });
   }
 });
+
 app.get('/api/films/:filmId', async (req, res) => {
   const filmId = req.params.filmId;
   try {
+
+    if (!filmId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: 'Invalid film ID format' });
+    }
+
     const film = await Film.findById(filmId);
-    res.json(film);
+    if (!film) {
+      return res.status(404).json({ error: 'Film not found' });
+    }
+
+    let videoUrl = null;
+    if (film.video) {
+      minioClient.presignedGetObject(
+        BUCKET_NAME,
+        film.video.replace(`/${BUCKET_NAME}/`, ''),
+        24 * 60 * 60, 
+        (err, url) => {
+          if (err) {
+            console.error('Error generating video URL:', err);
+            return res.status(500).json({ error: 'Error generating video URL' });
+          }
+          res.json({ ...film.toObject(), videoUrl: url });
+        }
+      );
+    } else {
+      res.json(film);
+    }
   } catch (err) {
-    res.status(500).json({ error: 'Film not found' });
+    console.error('Error fetching film:', err); 
+    res.status(500).json({ error: 'An error occurred while fetching the film' });
   }
 });
 

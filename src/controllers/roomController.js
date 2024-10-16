@@ -48,7 +48,7 @@ const updateRoom = async (req, res) => {
 
 const getRooms = async (req, res) => {
   try {
-    const rooms = await Room.find().populate('film');
+    const rooms = await Room.find();
     res.status(200).json(rooms);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -59,15 +59,15 @@ const deleteRoom = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const room = await Room.findById(id);
+    const room = await Room.findByIdAndDelete(id);
 
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    await room.remove(); 
     res.status(200).json({ message: 'Room deleted successfully' });
   } catch (error) {
+    console.error(`Error deleting room with ID ${id}:`, error); 
     res.status(500).json({ message: error.message });
   }
 };

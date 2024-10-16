@@ -1,3 +1,6 @@
+const Film = require('../models/filmModel');
+const Reservation = require('../models/reservationModel');
+const Seance = require('../models/seanceModel');
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 
@@ -59,4 +62,25 @@ const deleteAdmin = async (req, res) => {
   res.json({ message: 'Admin deleted successfully' });
 };
 
-module.exports = { getAdmins, addAdmin, updateAdmin, deleteAdmin };
+
+const getStatistics = async (req, res) => {
+  try {
+    const userCount = await User.countDocuments({ role: 'client' });
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    const filmCount = await Film.countDocuments();
+    const seanceCount = await Seance.countDocuments();
+    const reservationCount = await Reservation.countDocuments();
+
+    res.status(200).json({
+      users: userCount,
+      admins: adminCount,
+      films: filmCount,
+      seances: seanceCount,
+      reservations: reservationCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getAdmins, addAdmin, updateAdmin, deleteAdmin,getStatistics };

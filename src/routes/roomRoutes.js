@@ -5,8 +5,8 @@ const router = express.Router();
 
 
 router.post('/add', protect, adminOnly, createRoom);
-router.put('/update/:id', protect, adminOnly,updateRoom);
-router.delete('/delete/:id', protect, adminOnly,deleteRoom); 
+router.put('/update/:id',updateRoom);
+router.delete('/delete/:id',deleteRoom); 
 
 
 router.get('/', getRooms);
