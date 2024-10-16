@@ -11,6 +11,7 @@ const uploadToMinio = (filePath, fileName) => {
       if (err) {
         return reject(err);
       }
+
       fs.unlink(filePath, (unlinkErr) => {
         if (unlinkErr) {
           console.error('Error deleting local file:', unlinkErr);
@@ -20,6 +21,7 @@ const uploadToMinio = (filePath, fileName) => {
     });
   });
 };
+
 
 const getPresignedUrl = (objectName, expires = 24 * 60 * 60) => { // 24 hours
   return new Promise((resolve, reject) => {
@@ -31,13 +33,20 @@ const getPresignedUrl = (objectName, expires = 24 * 60 * 60) => { // 24 hours
 };
 
 
+const deleteVideoFromMinio = (objectName) => {
+  return new Promise((resolve, reject) => {
+    minioClient.removeObject(BUCKET_NAME, objectName, (err) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
+  });
+};
+
 const addFilm = async (req, res) => {
   try {
-    console.log('Received req.body:', req.body);
-    console.log('Received req.files:', req.files);
-
     const { title, director, releaseYear, genre } = req.body;
-
 
     if (!title || !director || !genre || !releaseYear) {
       return res.status(400).json({ message: 'All fields are required' });
@@ -54,21 +63,18 @@ const addFilm = async (req, res) => {
 
     const imagePath = path.join('uploads', imageFile.filename).replace(/\\/g, '/');
 
-    let videoPath;
-    let videoObjectName;
+    let videoObjectName = null;
     let presignedVideoUrl = null;
-
 
     if (req.files.video && req.files.video.length > 0) {
       const videoFile = req.files.video[0];
       if (!videoFile.filename) {
         return res.status(400).json({ message: 'Video file upload failed' });
       }
-      videoPath = path.join('uploads/videos', videoFile.filename).replace(/\\/g, '/');
       videoObjectName = `videos/${videoFile.filename}`;
+      const videoPath = path.join('uploads/videos', videoFile.filename).replace(/\\/g, '/');
       try {
         await uploadToMinio(videoPath, videoObjectName);
-
         presignedVideoUrl = await getPresignedUrl(videoObjectName, 24 * 60 * 60); // 24 hours
       } catch (error) {
         console.error('Error uploading video to MinIO:', error);
@@ -82,7 +88,8 @@ const addFilm = async (req, res) => {
       releaseYear,
       genre,
       image: imagePath,
-      video: presignedVideoUrl, 
+      videoObjectName, 
+      videoUrl: presignedVideoUrl, 
     });
     await newFilm.save();
     res.status(201).json({ message: 'Film added successfully', newFilm });
@@ -92,19 +99,16 @@ const addFilm = async (req, res) => {
   }
 };
 
-
 const getFilms = async (req, res) => {
   try {
     const films = await Film.find();
 
-
     const filmsWithVideoUrls = await Promise.all(
       films.map(async (film) => {
         let videoUrl = null;
-        if (film.video) {
-          const objectName = film.video.replace(`/${BUCKET_NAME}/`, '');
+        if (film.videoObjectName) {
           try {
-            videoUrl = await getPresignedUrl(objectName, 24 * 60 * 60); // 24 hours
+            videoUrl = await getPresignedUrl(film.videoObjectName, 24 * 60 * 60); // 24 hours
           } catch (error) {
             console.error(`Error generating presigned URL for film ${film._id}:`, error);
           }
@@ -124,13 +128,16 @@ const getFilms = async (req, res) => {
   }
 };
 
-
 const updateFilm = async (req, res) => {
   try {
     console.log('Received req.files:', req.files);
 
     const { id } = req.params;
     const { title, director, releaseYear, genre } = req.body;
+
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid film ID format' });
+    }
 
     const film = await Film.findById(id);
     if (!film) {
@@ -156,12 +163,16 @@ const updateFilm = async (req, res) => {
       if (!videoFile.filename) {
         return res.status(400).json({ message: 'Video file upload failed' });
       }
-      const videoPath = path.join('uploads/videos', videoFile.filename).replace(/\\/g, '/');
       const videoObjectName = `videos/${videoFile.filename}`;
+      const videoPath = path.join('uploads/videos', videoFile.filename).replace(/\\/g, '/');
       try {
         await uploadToMinio(videoPath, videoObjectName);
         const presignedVideoUrl = await getPresignedUrl(videoObjectName, 24 * 60 * 60); // 24 hours
-        film.video = presignedVideoUrl;
+        if (film.videoObjectName) {
+          await deleteVideoFromMinio(film.videoObjectName);
+        }
+        film.videoObjectName = videoObjectName;
+        film.videoUrl = presignedVideoUrl;
       } catch (error) {
         console.error('Error uploading video to MinIO:', error);
         return res.status(500).json({ message: 'Error uploading video to storage', error: error.message });
@@ -176,24 +187,38 @@ const updateFilm = async (req, res) => {
   }
 };
 
-
 const deleteFilm = async (req, res) => {
   try {
     const { id } = req.params;
 
+    console.log(`Attempting to delete film with ID: ${id}`);
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      console.log('Invalid film ID format.');
+      return res.status(400).json({ message: 'Invalid film ID format' });
+    }
+
     const film = await Film.findById(id);
+    console.log('Film found:', film);
+
     if (!film) {
+      console.log('Film not found.');
       return res.status(404).json({ message: 'Film not found' });
     }
 
-    if (film.video) {
-      const videoObjectName = film.video.replace(`/${BUCKET_NAME}/`, '');
-      minioClient.removeObject(BUCKET_NAME, videoObjectName, (err) => {
-        if (err) console.error('Error deleting video from MinIO:', err);
-      });
+
+    if (film.videoObjectName) {
+      console.log(`Deleting video from MinIO: ${film.videoObjectName}`);
+      try {
+        await deleteVideoFromMinio(film.videoObjectName);
+        console.log(`Video ${film.videoObjectName} deleted from MinIO.`);
+      } catch (err) {
+        console.error('Error deleting video from MinIO:', err);
+      }
     }
 
-    await film.remove();
+    await Film.findByIdAndDelete(id);
+    console.log('Film deleted from database.');
+
     res.json({ message: 'Film deleted successfully' });
   } catch (error) {
     console.error('Error in deleteFilm:', error);
