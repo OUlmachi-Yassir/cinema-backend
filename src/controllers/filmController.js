@@ -89,7 +89,7 @@ const addFilm = async (req, res) => {
       genre,
       image: imagePath,
       videoObjectName, 
-      videoUrl: presignedVideoUrl, 
+      video: presignedVideoUrl, 
     });
     await newFilm.save();
     res.status(201).json({ message: 'Film added successfully', newFilm });
@@ -172,7 +172,7 @@ const updateFilm = async (req, res) => {
           await deleteVideoFromMinio(film.videoObjectName);
         }
         film.videoObjectName = videoObjectName;
-        film.videoUrl = presignedVideoUrl;
+        film.video = presignedVideoUrl;
       } catch (error) {
         console.error('Error uploading video to MinIO:', error);
         return res.status(500).json({ message: 'Error uploading video to storage', error: error.message });
