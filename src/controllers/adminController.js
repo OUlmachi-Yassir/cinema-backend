@@ -53,14 +53,20 @@ const updateAdmin = async (req, res) => {
 const deleteAdmin = async (req, res) => {
   const { id } = req.params;
 
-  const admin = await User.findById(id);
-  if (!admin || admin.role !== 'admin') {
-    return res.status(404).json({ message: 'Admin not found' });
-  }
+  try {
+    const admin = await User.findById(id);
+    if (!admin || admin.role !== 'admin') {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
 
-  await admin.remove();
-  res.json({ message: 'Admin deleted successfully' });
+    await User.deleteOne({ _id: id });
+    res.json({ message: 'Admin deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting admin:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
+
 
 
 const getStatistics = async (req, res) => {

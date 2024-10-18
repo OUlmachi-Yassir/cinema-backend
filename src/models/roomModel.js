@@ -11,9 +11,8 @@ const roomSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['Standard', 'Deluxe', 'VIP'],
-    default: 'Standard',
-    required: true
+    enum: ['Standard', 'VIP', 'IMAX', '3D'], 
+    required: true,
   }
 }, {
   timestamps: true

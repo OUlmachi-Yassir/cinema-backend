@@ -88,14 +88,15 @@ const updateSeance = async (req, res) => {
 
 
 const deleteSeance = async (req, res) => {
+  const { id } = req.params
   try {
-    const seance = await Seance.findById(req.params.id);
+    const seance = await Seance.findById( id );
 
     if (!seance) {
       return res.status(404).json({ message: 'Séance not found' });
     }
 
-    await seance.remove();
+    await Seance.deleteOne({ _id : id });
     res.status(200).json({ message: 'Séance deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });

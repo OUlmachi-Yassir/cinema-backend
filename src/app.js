@@ -10,6 +10,7 @@ const filmRoutes = require('./routes/filmRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const seanceRoutes = require('./routes/seanceRoutes');
 const reservation = require('./routes/reservationRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 
 const cookieParser = require('cookie-parser');
 const Seance = require('./models/seanceModel');
@@ -37,6 +38,8 @@ app.use('/api/films', filmRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/seance', seanceRoutes);
 app.use('/api/reservation',reservation);
+app.use('/api/comments', commentRoutes);
+
 
 app.get('/api/seances', async (req, res) => {
   const { filmId } = req.query;
