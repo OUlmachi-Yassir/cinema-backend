@@ -12,6 +12,7 @@ const seanceRoutes = require('./routes/seanceRoutes');
 const reservation = require('./routes/reservationRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 const favoriteRootes = require('./routes/favoriteRoutes')
+const RatingRoutes = require('./routes/ratingRoutes');
 
 const cookieParser = require('cookie-parser');
 const Seance = require('./models/seanceModel');
@@ -41,6 +42,7 @@ app.use('/api/seance', seanceRoutes);
 app.use('/api/reservation',reservation);
 app.use('/api/comments', commentRoutes);
 app.use('/api/favorite',favoriteRootes);
+app.use('/api/',RatingRoutes);
 
 
 app.get('/api/seances', async (req, res) => {
