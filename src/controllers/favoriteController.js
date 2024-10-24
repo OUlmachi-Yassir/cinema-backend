@@ -6,13 +6,14 @@ const addFavorite = async (req, res) => {
   const { userId, filmId } = req.body;
 
   try {
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(filmId)) {
+      return res.status(400).json({ message: 'Invalid userId or filmId' });
+    }
+
     const userObjectId = new mongoose.Types.ObjectId(userId);
     const filmObjectId = new mongoose.Types.ObjectId(filmId);
 
-    const existingFavorite = await Favorite.findOne({ 
-      Client: userObjectId, 
-      film: filmObjectId 
-    });
+    const existingFavorite = await Favorite.findOne({ Client: userObjectId, film: filmObjectId });
 
     if (existingFavorite) {
       return res.status(400).json({ message: 'Film is already in your favorite list.' });
@@ -47,19 +48,13 @@ const getFavorites = async (req, res) => {
 };
 
 const removeFavorite = async (req, res) => {
-  const { userId, filmId } = req.body;
+  const { id } = req.params;
 
   try {
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-    const filmObjectId = new mongoose.Types.ObjectId(filmId);
-
-    const favorite = await Favorite.findOneAndDelete({ 
-      Client: userObjectId, 
-      film: filmObjectId 
-    });
+    const favorite = await Favorite.findByIdAndDelete(id);
 
     if (!favorite) {
-      return res.status(404).json({ message: 'Film not found in your favorites.' });
+      return res.status(404).json({ message: 'Favorite not found.' });
     }
 
     res.status(200).json({ message: 'Film removed from favorites.' });
@@ -68,6 +63,7 @@ const removeFavorite = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 module.exports = {
   addFavorite,
