@@ -19,6 +19,7 @@ const Seance = require('./models/seanceModel');
 const Film = require('./models/filmModel');
 
 const { minioClient, BUCKET_NAME } = require('./config/minioConfig'); // <-- Import here
+const Favorite = require('./models/favoriteModel');
 
 dotenv.config();
 
@@ -60,6 +61,28 @@ app.get('/api/seances', async (req, res) => {
     res.status(500).json({ message: 'Error fetching seances' });
   }
 });
+
+
+app.get("/api/favorite/:filmId/:userId", async (req, res) => {
+  const { filmId, userId } = req.params;
+  
+  try {
+    const favorite = await Favorite.findOne({ 
+      film: filmId,
+      Client: userId 
+    });
+
+    if (favorite) {
+      return res.status(200).json({ isFavorite: favorite.myFavorite });
+    }
+
+    return res.status(200).json({ isFavorite: false });
+  } catch (error) {
+    console.error('Error fetching favorite:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 app.get('/api/films/:filmId', async (req, res) => {
   const filmId = req.params.filmId;
